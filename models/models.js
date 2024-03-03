@@ -92,7 +92,8 @@ User.init({
     },
     user_number: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     user_fname: {
         type: DataTypes.STRING(225),
@@ -104,7 +105,8 @@ User.init({
     },
     user_email: {
         type: DataTypes.STRING(225),
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     user_password: {
         type: DataTypes.STRING(225),
@@ -139,7 +141,11 @@ LotIn.init({
         primaryKey: true,
         autoIncrement: true
     },
-    lot_status: {
+    lot_in_number: {
+        type: DataTypes.STRING(45),
+        allowNull: false
+    },
+    lot_in_status: {
         type: DataTypes.STRING(45),
         allowNull: false
     },
@@ -156,22 +162,27 @@ LotIn.init({
 User.hasMany(LotIn, { foreignKey: 'user_id' });
 LotIn.belongsTo(User, { foreignKey: 'user_id' });
 
-class InProductOrder extends Model {}
+class InBoundOrder extends Model {}
 
-InProductOrder.init({
-    in_prod_id: {
+InBoundOrder.init({
+    inbound_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    in_prod_amount: {
+    inbound_amount: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    in_prod_status: {
+    inbound_status: {
         type: DataTypes.STRING(45),
         allowNull: false
     },
+    inbound_exp: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+
     mas_prod_id: {
         type: DataTypes.INTEGER,
         allowNull: false
@@ -182,14 +193,14 @@ InProductOrder.init({
     }
 }, {
     sequelize,
-    tableName: 'in_product_orders',
+    tableName: 'inbound_orders',
     timestamps: false
 });
 
-MasterProduct.hasMany(InProductOrder, { foreignKey: 'mas_prod_id' });
-InProductOrder.belongsTo(MasterProduct, { foreignKey: 'mas_prod_id' });
-LotIn.hasMany(InProductOrder, { foreignKey: 'lot_in_id' });
-InProductOrder.belongsTo(LotIn, { foreignKey: 'lot_in_id' });
+MasterProduct.hasMany(InBoundOrder, { foreignKey: 'mas_prod_id' });
+InBoundOrder.belongsTo(MasterProduct, { foreignKey: 'mas_prod_id' });
+LotIn.hasMany(InBoundOrder, { foreignKey: 'lot_in_id' });
+InBoundOrder.belongsTo(LotIn, { foreignKey: 'lot_in_id' });
 
 class Rack extends Model {}
 
@@ -253,7 +264,12 @@ LotOut.init({
         primaryKey: true,
         autoIncrement: true
     },
-    lot_status: {
+    lot_out_number: {
+        type: DataTypes.STRING(45),
+        allowNull: false
+    },
+
+    lot_out_status: {
         type: DataTypes.STRING(45),
         allowNull: false
     },
@@ -270,20 +286,20 @@ LotOut.init({
 User.hasMany(LotOut, { foreignKey: 'user_id' });
 LotOut.belongsTo(User, { foreignKey: 'user_id' });
 
-class OutProductOrder extends Model {}
+class OutBoundOrder extends Model {}
 
-OutProductOrder.init({
-    out_prod_id: {
+OutBoundOrder.init({
+    outbound_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
-    out_amount: {
+    outbound_amount: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    out_productscol: {
-        type: DataTypes.INTEGER,
+    outbound_status: {
+        type: DataTypes.STRING,
         allowNull: false
     },
     mas_prod_id: {
@@ -296,14 +312,14 @@ OutProductOrder.init({
     }
 }, {
     sequelize,
-    tableName: 'out_product_orders',
+    tableName: 'outbound_orders',
     timestamps: false
 });
 
-MasterProduct.hasMany(OutProductOrder, { foreignKey: 'mas_prod_id' });
-OutProductOrder.belongsTo(MasterProduct, { foreignKey: 'mas_prod_id' });
-LotOut.hasMany(OutProductOrder, { foreignKey: 'lot_out_id' });
-OutProductOrder.belongsTo(LotOut, { foreignKey: 'lot_out_id' });
+MasterProduct.hasMany(OutBoundOrder, { foreignKey: 'mas_prod_id' });
+OutBoundOrder.belongsTo(MasterProduct, { foreignKey: 'mas_prod_id' });
+LotOut.hasMany(OutBoundOrder, { foreignKey: 'lot_out_id' });
+OutBoundOrder.belongsTo(LotOut, { foreignKey: 'lot_out_id' });
 
 class OnshelfProduct extends Model {}
 
@@ -321,11 +337,15 @@ OnshelfProduct.init({
         type: DataTypes.STRING(45),
         allowNull: false
     },
+    on_prod_note: {
+        type: DataTypes.STRING(225),
+        allowNull: true
+    },
     space_id: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    in_prod_id: {
+    inbound_id: {
         type: DataTypes.INTEGER,
         allowNull: false
     }
@@ -337,8 +357,8 @@ OnshelfProduct.init({
 
 Space.hasMany(OnshelfProduct, { foreignKey: 'space_id' });
 OnshelfProduct.belongsTo(Space, { foreignKey: 'space_id' });
-InProductOrder.hasMany(OnshelfProduct, { foreignKey: 'in_prod_id' });
-OnshelfProduct.belongsTo(InProductOrder, { foreignKey: 'in_prod_id' });
+InBoundOrder.hasMany(OnshelfProduct, { foreignKey: 'inbound_id' });
+OnshelfProduct.belongsTo(InBoundOrder, { foreignKey: 'inbound_id' });
 
 class OutProductList extends Model {}
 
@@ -352,26 +372,18 @@ OutProductList.init({
         type: DataTypes.STRING(45),
         allowNull: true
     },
-    out_prod_id: {
+    outbound_id: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    on_prod_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    },
-    out_product_listscol: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    }
 }, {
     sequelize,
     tableName: 'out_product_lists',
     timestamps: false
 });
 
-OutProductOrder.hasMany(OutProductList, { foreignKey: 'out_prod_id' });
-OutProductList.belongsTo(OutProductOrder, { foreignKey: 'out_prod_id' });
+OutBoundOrder.hasMany(OutProductList, { foreignKey: 'outbound_id' });
+OutProductList.belongsTo(OutBoundOrder, { foreignKey: 'outbound_id' });
 OnshelfProduct.hasMany(OutProductList, { foreignKey: 'on_prod_id' });
 OutProductList.belongsTo(OnshelfProduct, { foreignKey: 'on_prod_id' });
 
@@ -381,11 +393,11 @@ module.exports = {
     Warehouse,
     User,
     LotIn,
-    InProductOrder,
+    InBoundOrder,
     Rack,
     Space,
     LotOut,
-    OutProductOrder,
+    OutBoundOrder,
     OnshelfProduct,
     OutProductList
 };
